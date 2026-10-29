@@ -80,12 +80,26 @@ for lin in ws.iter_rows(min_row=2, values_only=True):
     if conc:
         w, h = salva(conc[-1], SAIDA / pid / 'conceito.webp', 1100)
         conceito = {'src': f'assets/pecas/{pid}/conceito.webp', 'w': w, 'h': h}
+    # artes na medida de produção (as faces planas que vão para a gráfica), da pasta TEXTURAS
+    artes = []
+    tex = ap / 'TEXTURAS'
+    if tex.is_dir():
+        vistos = set()
+        for f in sorted(tex.iterdir()):
+            m = re.match(cod + r'_(.+?)_(\d+)x(\d+)mm\.(jpg|png)$', f.name, re.I)
+            if not m or m.group(1) in vistos:
+                continue
+            vistos.add(m.group(1))
+            arq = f'arte-{len(artes)+1:02d}.webp'
+            w, h = salva(f, SAIDA / pid / arq, 900, 78)
+            nome_f = re.sub(r'^k_', '', m.group(1)).replace('_', ' ').strip()
+            artes.append({'src': f'assets/pecas/{pid}/{arq}', 'tipo': 'arte', 'w': w, 'h': h, 'rot': f'{nome_f} · {m.group(2)} × {m.group(3)} mm'})
     fonte_heroi = next((f for _, _, tipo, f in imgs if tipo == 'heroi'), imgs[0][3])
     salva(fonte_heroi, SAIDA / pid / 'mini.webp', 560, 78)
     pecas.append({
         'id': pid, 'codigo': cod, 'nome': nome, 'canal': CANAL.get(canal, canal),
         'grupo': GRUPO.get(cod, canal.replace('B2B ', '')),
-        'mini': f'assets/pecas/{pid}/mini.webp', 'vistas': vistas, 'conceito': conceito,
+        'mini': f'assets/pecas/{pid}/mini.webp', 'vistas': vistas, 'conceito': conceito, 'artes': artes[:6],
     })
     print(cod, nome, len(vistas), 'vistas', 'conceito' if conceito else 'sem conceito')
 

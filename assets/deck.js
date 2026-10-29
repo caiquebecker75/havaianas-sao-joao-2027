@@ -157,17 +157,17 @@
 
   /* ---------------------------------------------------------- ficha da peça */
   const ficha=$('#ficha');let fichaAtual=null,listaFicha=PECAS;
-  const ROT={heroi:'3/4',frontal:'Frontal',detalhe:'Detalhe',aplicado:'No PDV',conceito:'Conceito'};
+  const ROT={heroi:'3/4',frontal:'Frontal',detalhe:'Detalhe',aplicado:'No PDV',conceito:'Conceito',arte:'Arte na medida'};
   const TXT={heroi:'Render da cena 3D, com material e produto em tamanho real.',frontal:'Vista frontal da cena 3D.',detalhe:'Detalhe construtivo da cena 3D.',aplicado:'A peça montada no ponto de venda.',conceito:'Conceito gerado a partir dos KVs, antes do 3D.'};
   function mostraVista(v){
     $('#fiImg').src=v.src;
     $$('#fiMini button').forEach(b=>b.classList.toggle('on',b.dataset.src===v.src));
-    $('#fiTxt').textContent=TXT[v.tipo]||'';
+    $('#fiTxt').textContent=v.tipo==='arte'?'Engenharia e arte-final: '+v.rot+', a face que vai para a gráfica.':(TXT[v.tipo]||'');
   }
   function abrirFicha(id){
     const p=porId[id];if(!p)return;fichaAtual=p;
     $('#fiCanal').textContent=p.canal+' · '+p.grupo;$('#fiCod').textContent=p.codigo;$('#fiNome').textContent=p.nome;
-    const vistas=[...p.vistas];if(p.conceito)vistas.push({...p.conceito,tipo:'conceito'});
+    const vistas=[...p.vistas];if(p.conceito)vistas.push({...p.conceito,tipo:'conceito'});(p.artes||[]).forEach(a=>vistas.push(a));
     const m=$('#fiMini');m.innerHTML='';
     vistas.forEach(v=>{const b=document.createElement('button');b.dataset.src=v.src;b.style.backgroundImage='url('+v.src+')';b.dataset.cursor='Ver';
       b.innerHTML='<span></span>';b.firstChild.textContent=ROT[v.tipo]||v.tipo;b.addEventListener('click',e=>{e.stopPropagation();mostraVista(v);});m.appendChild(b);});
@@ -300,11 +300,16 @@
         el('path',{class:'tira',d:'M6 32L15 18l9 14',fill:'none',transform:'scale(1.6) translate(-6 -10)'},u);});
       pares.push(p);
     });
-    const bs=$$('#rodaFracao button');
-    function fr(n){pares.forEach((p,i)=>p.classList.toggle('fora',i>=n));bs.forEach(b=>b.classList.toggle('on',+b.dataset.n===n));}
-    bs.forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();fr(+b.dataset.n);}));
-    aoEntrar['s-roda']=()=>fr(6);
-    roteiro('s-roda',{itens:()=>bs,inicio:()=>-1,primeiro:4000,ms:()=>3500});
+    const bs=$$('#rodaFracao button'),roda=$('#roda6');
+    // o desenho da roda sai girando e entra o render 3D da flor de chinelos
+    function fr(n){
+      roda.classList.toggle('em3d',n==='3d');
+      if(n!=='3d')pares.forEach((p,i)=>p.classList.toggle('fora',i>=n));
+      bs.forEach(b=>b.classList.toggle('on',b.dataset.n===String(n)));
+    }
+    bs.forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();fr(b.dataset.n==='3d'?'3d':+b.dataset.n);}));
+    aoEntrar['s-roda']=()=>fr(modoPdf?'3d':6);
+    roteiro('s-roda',{itens:()=>bs,inicio:()=>2,ms:k=>k===2?2400:k===3?6000:3500});
   })();
 
   /* ---------------------------------------------------------- 09 desdobramento */
@@ -375,6 +380,33 @@
   };
   roteiro('s-ar',{itens:()=>$$('#arChips button'),ms:()=>7000});
 
+
+  /* ---------------------------------------------------------- story visit: topview com os pontos de cada loja */
+  $$('.s-loja').forEach(t=>{
+    const dados=JSON.parse(t.querySelector('.dados-l').textContent),pins=[...t.querySelectorAll('.pin')],box=t.querySelector('.ponto');
+    let k=0,r=0;
+    function foto(){const d=dados[k];const im=box.querySelector('.foto-p img');im.src=d.r[r];im.dataset.amplia=d.r[r];
+      box.querySelector('.foto-p').dataset.n=d.r.length>1?(r+1)+' / '+d.r.length:'';}
+    function mostra(i){
+      k=i;r=0;const d=dados[i];
+      pins.forEach((p,j)=>p.classList.toggle('on',j===i));
+      box.querySelector('.num-p').textContent='Ponto '+(i+1)+' de '+dados.length;
+      box.querySelector('h3').textContent=d.t;box.querySelector('p').textContent=d.d;foto();
+      const pc=box.querySelector('.pecas-p');pc.innerHTML='';
+      d.p.forEach(id=>{const q=porId[id];if(!q)return;const b=document.createElement('button');b.className='pc';b.dataset.ficha=id;b.dataset.cursor='Abrir';
+        b.innerHTML='<img alt=""><span><b></b></span>';b.querySelector('img').src=q.mini;b.querySelector('b').textContent=q.codigo;b.querySelector('span').append(q.nome);pc.appendChild(b);});
+      if(d.p.length){const h=document.createElement('em');h.textContent='Peças da campanha para este ponto · clique para ver renders, conceito e artes na medida';pc.prepend(h);}
+      box.classList.remove('troca');void box.offsetWidth;box.classList.add('troca');
+    }
+    pins.forEach((p,i)=>p.addEventListener('click',e=>{e.stopPropagation();mostra(i);}));
+    // a foto do ponto passa pelos renders daquele ponto; com um só, amplia
+    box.querySelector('.foto-p').addEventListener('click',e=>{e.stopPropagation();const d=dados[k];
+      if(d.r.length>1&&e.isTrusted){r=(r+1)%d.r.length;foto();}else{$('#cxImg').src=d.r[r];$('#cxTxt').textContent=d.t;caixa.classList.add('aberta');}});
+    mostra(0);
+  });
+  aoEntrar['s-loja']=t=>{const p=t.querySelector('.pin');if(p)p.click();};
+  roteiro('s-loja',{itens:t=>[...t.querySelectorAll('.pin')],texto:k=>'',ms:()=>5200});
+
   /* ---------------------------------------------------------- temporizador
      Os botões de cada tela abrem sozinhos, um de cada vez, com tempo para ler.
      O primeiro clique da pessoa dentro da tela para o temporizador até ela sair e voltar. */
@@ -384,7 +416,7 @@
   function iniciarAutos(t){
     if(modoPdf)return;
     (autos[t.classList[1]]||[]).forEach(cfg=>{
-      const itens=cfg.itens(),n=itens.length;if(!n)return;
+      const itens=cfg.itens(t),n=itens.length;if(!n)return;
       const ms=k=>cfg.ms?cfg.ms(k):leitura(cfg.texto?cfg.texto(k):itens[k].textContent)+(cfg.extra||0);
       let i=cfg.inicio?cfg.inicio():Math.max(0,itens.findIndex(x=>x.matches('.on')));
       function relogio(k,dur){

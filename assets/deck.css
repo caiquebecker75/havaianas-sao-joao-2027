@@ -436,3 +436,79 @@ body.tem-mouse.clicou #anel{transform:scale(.8)}
 .pdf #cursor,.pdf #anel,.pdf #prog,.pdf #btnSumario,.pdf #btnPdf,.pdf #btnProposta,.pdf #rodape .nav button,.pdf #gire{display:none!important}
 .pdf .so-tela{display:none!important}
 .pdf .s-vit .fundo{transform:none}
+
+/* ---------- 08 roda: do desenho ao render 3D ---------- */
+.s-roda .roda svg{transition:transform 1.1s cubic-bezier(.6,0,.2,1),opacity .8s}
+.s-roda .mandala{position:absolute;left:50%;top:50%;width:470px;height:470px;margin:-235px 0 0 -235px;border-radius:50%;opacity:0;transform:scale(.35) rotate(-90deg);transition:transform 1.3s cubic-bezier(.2,.8,.2,1) .25s,opacity .8s .25s;box-shadow:0 30px 60px rgba(26,21,18,.25)}
+.s-roda .rot-m{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);font-family:var(--rot);font-weight:700;font-size:12px;letter-spacing:.16em;text-transform:uppercase;background:var(--tinta);color:var(--papel);padding:6px 10px 4px;opacity:0;transition:opacity .5s .9s;white-space:nowrap}
+.s-roda .roda.em3d svg{transform:rotate(200deg) scale(.55);opacity:0}
+.s-roda .roda.em3d .mandala{opacity:1;transform:none;animation:giraM 60s linear 1.6s infinite}
+.s-roda .roda.em3d .rot-m{opacity:1}
+@keyframes giraM{to{transform:rotate(360deg)}}
+.s-roda .fracao .b3d{background:var(--verm);color:var(--papel);border-color:var(--verm)}
+.s-roda .fracao .b3d.on{background:var(--tinta);border-color:var(--tinta)}
+.pdf .s-roda .roda.em3d svg{opacity:.18;transform:scale(1.18)}
+
+/* ---------- story visit: abertura ---------- */
+.s-sv .rotulo{position:absolute;left:72px;top:118px;color:var(--amar)}
+.s-sv h2{position:absolute;left:72px;top:150px;width:1300px;font-size:58px}
+.s-sv h2 em{color:var(--amar)}
+.s-sv .lead{position:absolute;left:72px;top:300px;max-width:1100px;font-size:20px;opacity:.88}
+.s-sv .cards-l{position:absolute;left:72px;right:72px;top:420px;display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.s-sv .cl{background:var(--papel);color:var(--tinta);display:flex;flex-direction:column;text-align:left;transition:transform .25s,box-shadow .25s;overflow:hidden}
+.s-sv .cl:hover{transform:translateY(-6px);box-shadow:6px 6px 0 var(--amar)}
+.s-sv .cl img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:#fff}
+.s-sv .cl b{font-family:var(--titulo);font-weight:400;font-size:22px;padding:12px 14px 2px}
+.s-sv .cl span{font-family:var(--rot);font-weight:600;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;padding:0 14px 14px;opacity:.7}
+
+/* ---------- story visit: cada loja ---------- */
+.s-loja .cab-l{position:absolute;left:72px;right:72px;top:104px}
+.s-loja .cab-l .rotulo{color:var(--verm);margin-bottom:8px;display:block}
+.s-loja .cab-l h2{font-size:30px;line-height:1.1;max-width:1300px}
+.s-loja .topo-l{position:absolute;left:72px;top:200px;width:900px;height:506px;background:#000;overflow:hidden;border:3px solid var(--tinta)}
+.s-loja .topo-l>img{width:100%;height:100%;object-fit:cover;display:block}
+.s-loja .tag-l{position:absolute;left:10px;top:10px;font-family:var(--rot);font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase;background:var(--tinta);color:var(--papel);padding:5px 8px 3px}
+.s-loja .pin{position:absolute;width:0;height:0}
+.s-loja .pin i{position:absolute;left:-19px;top:-46px;width:38px;height:38px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);background:var(--verm);border:3px solid var(--papel);box-shadow:0 6px 14px rgba(0,0,0,.45);display:grid;place-items:center;transition:transform .25s,background .2s;animation:pulsoPin 2.2s ease-in-out infinite}
+.s-loja .pin i::first-line{line-height:1}
+.s-loja .pin i{font-style:normal;font-family:var(--titulo);font-size:18px;color:var(--papel)}
+.s-loja .pin i{text-indent:0}
+.s-loja .pin::after{content:'';position:absolute;left:-6px;top:-6px;width:12px;height:12px;border-radius:50%;background:var(--amar);border:2px solid var(--tinta)}
+.s-loja .pin:hover i{transform:rotate(-45deg) scale(1.15)}
+.s-loja .pin.on i{background:var(--amar);color:var(--tinta);transform:rotate(-45deg) scale(1.25);animation:none}
+@keyframes pulsoPin{50%{box-shadow:0 6px 14px rgba(0,0,0,.45),0 0 0 8px rgba(249,37,15,.25)}}
+.s-loja .pin i{writing-mode:horizontal-tb}
+
+.s-loja .cta-l{position:absolute;left:72px;top:716px;display:inline-flex;align-items:center;gap:8px;font-family:var(--rot);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;background:var(--verm);color:var(--papel);padding:7px 10px 5px}
+.s-loja .cta-l::before{content:'➜';transform:rotate(-90deg);display:inline-block}
+.s-loja .ponto{position:absolute;left:996px;right:72px;top:200px;height:506px;background:var(--tinta);color:var(--papel);padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.s-loja .num-p{font-family:var(--rot);font-weight:700;font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--amar)}
+.s-loja .ponto h3{font-size:30px;line-height:1}
+.s-loja .foto-p{position:relative;height:220px;flex:none;overflow:hidden;background:#000}
+.s-loja .foto-p img{width:100%;height:100%;object-fit:cover;display:block}
+.s-loja .foto-p[data-n]:not([data-n=""])::after{content:attr(data-n) '  ›';position:absolute;right:8px;bottom:8px;background:var(--amar);color:var(--tinta);font-family:var(--rot);font-weight:700;font-size:11px;padding:4px 7px 2px}
+.s-loja .ponto p{font-size:15px;line-height:1.4;opacity:.9}
+.s-loja .pecas-p{display:flex;flex-direction:column;gap:6px;margin-top:auto}
+.s-loja .pecas-p em{font-style:normal;font-family:var(--rot);font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.6}
+.s-loja .pc{display:flex;gap:10px;align-items:center;background:rgba(244,231,206,.08);border:1px solid rgba(244,231,206,.18);padding:5px;text-align:left;transition:background .2s}
+.s-loja .pc:hover{background:var(--amar);color:var(--tinta)}
+.s-loja .pc img{width:68px;height:40px;object-fit:cover;flex:none}
+.s-loja .pc span{font-size:13px;line-height:1.2}
+.s-loja .pc b{display:block;font-family:var(--rot);font-size:10px;letter-spacing:.12em;color:var(--amar)}
+.s-loja .pc:hover b{color:var(--verm)}
+.s-loja .passeio{position:absolute;left:72px;right:72px;top:752px;display:flex;align-items:center;gap:12px}
+.s-loja .passeio>span{font-family:var(--rot);font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}
+.s-loja .fila-th{display:flex;gap:6px;overflow:hidden}
+.s-loja .th{flex:none;width:86px;height:52px;background:#ccc center/cover;border:2px solid var(--tinta);transition:transform .2s}
+.s-loja .th:hover{transform:translateY(-3px)}
+.s-loja .legenda-l{display:none}
+/* no PDF: a planta com todos os pontos numerados e a legenda no lugar do painel */
+.pdf .s-loja .pin i{animation:none}
+.pdf .s-loja .legenda-l{display:grid;position:absolute;left:996px;right:72px;top:200px;list-style:none;gap:6px;align-content:start}
+.pdf .s-loja .legenda-l li{display:flex;gap:10px;align-items:center;font-size:16px;border-bottom:1px solid var(--linha);padding:6px 0}
+.pdf .s-loja .legenda-l li i{font-style:normal;width:26px;height:26px;border-radius:50%;background:var(--verm);color:var(--papel);display:grid;place-items:center;font-family:var(--titulo);font-size:14px;flex:none}
+.pdf .s-loja .ponto{display:none}
+.s-loja .pin i b{display:block;transform:rotate(45deg);font-weight:400}
+.s-loja .pin.on i b{color:var(--tinta)}
+.s-loja .pin i.relogio-auto{display:none!important}
+.pdf .s-capa .acoes,.pdf .s-fim .acoes{display:none}

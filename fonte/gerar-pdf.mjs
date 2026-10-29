@@ -24,7 +24,10 @@ for (let n = 1; n <= total; n++) {
   // espera as imagens da tela e, na tela de AR, os modelos 3D
   await pg.evaluate(async () => {
     const t = document.querySelector('.tela.ativa');
-    await Promise.all([...t.querySelectorAll('img')].map((i) => i.complete ? 0 : new Promise((r) => { i.onload = i.onerror = r; })));
+    // imagem escondida com loading=lazy nunca carrega: só espera as visíveis, e no máximo 15 s
+    const vis = [...t.querySelectorAll('img')].filter((i) => i.offsetParent !== null);
+    vis.forEach((i) => { i.loading = 'eager'; });
+    await Promise.race([Promise.all(vis.map((i) => i.complete ? 0 : new Promise((r) => { i.onload = i.onerror = r; }))), new Promise((r) => setTimeout(r, 15000))]);
     const mvs = [...t.querySelectorAll('model-viewer')];
     if (mvs.length) {
       const ate = Date.now() + 30000;
@@ -33,7 +36,7 @@ for (let n = 1; n <= total; n++) {
     }
   });
   await pg.waitForTimeout(700);
-  const jpg = await pg.screenshot({ type: 'jpeg', quality: QUALIDADE });
+  const jpg = await pg.screenshot({ type: 'jpeg', quality: QUALIDADE, timeout: 180000 });
   if (PASTA) writeFileSync(`${PASTA}/${String(n).padStart(2, '0')}.jpg`, jpg);
   paginas.push(jpg);
   console.log('página', n, Math.round(jpg.length / 1024) + ' KB');
