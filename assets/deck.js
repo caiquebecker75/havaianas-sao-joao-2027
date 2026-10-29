@@ -342,19 +342,6 @@
     roteiro('s-b2b',{itens:()=>abas,ms:()=>7000});
   })();
 
-  /* ---------------------------------------------------------- 13 conceito x 3D */
-  (function(){
-    const ids=['p004','p030','p059','p040','p012','p057'],box=$('#c3dChips'),par=$('#c3dPar');
-    ids.forEach((id,k)=>{const p=porId[id];if(!p||!p.conceito)return;const b=document.createElement('button');b.textContent=p.codigo+' · '+p.nome;b.dataset.cursor='Ver';b.dataset.id=id;
-      b.addEventListener('click',e=>{e.stopPropagation();mostra(id);});box.appendChild(b);});
-    function mostra(id){const p=porId[id];$('.conc img',par).src=p.conceito.src;$('.r3d img',par).src=p.vistas[0].src;
-      $$('button',box).forEach(b=>b.classList.toggle('on',b.dataset.id===id));
-      $('.r3d .img',par).dataset.ficha=id;$('.r3d .img',par).dataset.cursor='Abrir';par.classList.remove('troca');void par.offsetWidth;par.classList.add('troca');}
-    mostra(ids[0]);
-    aoEntrar['s-c3d']=()=>mostra(ids[0]);
-    roteiro('s-c3d',{itens:()=>$$('button',box),ms:()=>5500});
-  })();
-
   /* ---------------------------------------------------------- 14 AR: as peças já publicadas na página de AR */
   let carregouMV=false;
   function montaAR(){
@@ -411,6 +398,11 @@
      Os botões de cada tela abrem sozinhos, um de cada vez, com tempo para ler.
      O primeiro clique da pessoa dentro da tela para o temporizador até ela sair e voltar. */
   function roteiro(cls,cfg){(autos[cls]=autos[cls]||[]).push(cfg);}
+  // PDF: tela com botões vira uma página por botão (fonte/gerar-pdf.mjs chama estas duas)
+  const SO_UMA_PAGINA=[];
+  const cfgPdf=()=>{const t=$('.tela.ativa');return SO_UMA_PAGINA.includes(t.classList[1])?null:[t,(autos[t.classList[1]]||[])[0]];};
+  window.__pdfEstados=()=>{const r=cfgPdf();if(!r||!r[1])return 0;const n=r[1].itens(r[0]).length;return n>1?n:0;};
+  window.__pdfEstado=k=>{const [t,c]=cfgPdf();c.itens(t)[k].click();};
   const leitura=txt=>Math.max(4500,Math.min(12000,3000+String(txt||'').replace(/\s+/g,' ').trim().length*45));
   function pararAutos(){autoAtivos.forEach(clearTimeout);autoAtivos=[];$$('.relogio-auto').forEach(r=>r.remove());}
   function iniciarAutos(t){
