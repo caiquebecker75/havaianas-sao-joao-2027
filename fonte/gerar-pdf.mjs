@@ -4,21 +4,26 @@
 // Página 1: capa do PDF (pdf-capa.html) com link para a versão em HTML, a apresentação completa.
 // Tela com botões (temporizador em deck.js): uma página por botão, para o PDF ler cada estado.
 import { chromium } from '/Volumes/hd caique becker/Mac Caique/Projetos/ariuno-videos/node_modules/playwright/index.mjs';
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 const BASE = (process.argv[2] || 'http://localhost:4703/').replace(/#.*$/, '');
-const SAIDA = process.argv[3] || new URL('../havaianas-sao-joao-2027-75lab.pdf', import.meta.url).pathname;
+const SAIDA = process.argv[3] || fileURLToPath(new URL('../havaianas-sao-joao-2027-75lab.pdf', import.meta.url));
 const LINK = 'https://projetos.75lab.com.br/havaianas-sao-joao-2027/';
 const TITULO = 'Havaianas Sao Joao 2027 - campanha demo 75 LAB';
 const PASTA = process.env.PASTA_PAGINAS || '';   // se definida, guarda os JPG de cada página para revisar
 const QUALIDADE = 86;
+// MONTAR=1 só monta o PDF com os JPG já fotografados em PASTA_PAGINAS (a página 1 é a capa com link)
+const MONTAR = !!process.env.MONTAR;
 
+const paginas = [];   // { jpg, link }
+if (MONTAR) readdirSync(PASTA).filter((f) => f.endsWith('.jpg')).sort().forEach((f, i) => paginas.push({ jpg: readFileSync(`${PASTA}/${f}`), link: i === 0 ? LINK : '' }));
+else {
 const navegador = await chromium.launch({ channel: 'chrome', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const pg = await navegador.newPage({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: 2 });
 pg.on('pageerror', (e) => console.log('erro na página:', e.message));
 if (PASTA) mkdirSync(PASTA, { recursive: true });
 
-const paginas = [];   // { jpg, link }
 const esperaImagens = () => pg.evaluate(async () => {
   const t = document.querySelector('.tela.ativa') || document.body;
   // imagem escondida com loading=lazy nunca carrega: só espera as visíveis, e no máximo 15 s
@@ -64,10 +69,13 @@ for (let n = 1; n <= total; n++) {
   await pg.evaluate(() => document.documentElement.classList.remove('estados'));
 }
 await navegador.close();
+}
 
 // PDF mínimo: uma imagem JPEG (DCTDecode, sem recompressão) por página de 960 x 540 pt (16:9, tamanho de slide)
 // A página com link ganha uma anotação /Link cobrindo a página toda.
-const W = 960, H = 540, PX = 3200, PY = 1800;
+const W = 960, H = 540;
+// largura e altura do JPEG (marcador SOF), porque as páginas podem ter sido reduzidas antes de montar
+const tamJpg = (b) => { for (let i = 2; i < b.length;) { const m = b[i + 1], l = b.readUInt16BE(i + 2); if (m >= 0xC0 && m <= 0xC3) return [b.readUInt16BE(i + 7), b.readUInt16BE(i + 5)]; i += 2 + l; } return [3200, 1800]; };
 const partes = [], offs = [];
 let tam = 0;
 const poe = (b) => { const buf = Buffer.isBuffer(b) ? b : Buffer.from(b, 'binary'); partes.push(buf); tam += buf.length; };
@@ -82,7 +90,7 @@ paginas.forEach(({ jpg, link }, i) => {
   const annot = link ? ` /Annots [<< /Type /Annot /Subtype /Link /Rect [0 0 ${W} ${H}] /Border [0 0 0] /A << /S /URI /URI (${link}) >> >>]` : '';
   obj(p, () => poe(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /XObject << /Im0 ${p + 2} 0 R >> >> /Contents ${p + 1} 0 R${annot} >>`));
   obj(p + 1, () => poe(`<< /Length ${conteudo.length} >>\nstream\n${conteudo}\nendstream`));
-  obj(p + 2, () => { poe(`<< /Type /XObject /Subtype /Image /Width ${PX} /Height ${PY} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>\nstream\n`); poe(jpg); poe('\nendstream'); });
+  obj(p + 2, () => { const [PX, PY] = tamJpg(jpg); poe(`<< /Type /XObject /Subtype /Image /Width ${PX} /Height ${PY} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>\nstream\n`); poe(jpg); poe('\nendstream'); });
 });
 const xref = tam, ult = 2 + n * 3;
 poe(`xref\n0 ${ult + 1}\n0000000000 65535 f \n`);

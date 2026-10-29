@@ -382,7 +382,7 @@
       const pc=box.querySelector('.pecas-p');pc.innerHTML='';
       d.p.forEach(id=>{const q=porId[id];if(!q)return;const b=document.createElement('button');b.className='pc';b.dataset.ficha=id;b.dataset.cursor='Abrir';
         b.innerHTML='<img alt=""><span><b></b></span>';b.querySelector('img').src=q.mini;b.querySelector('b').textContent=q.codigo;b.querySelector('span').append(q.nome);pc.appendChild(b);});
-      if(d.p.length){const h=document.createElement('em');h.textContent='Peças da campanha para este ponto · clique para ver renders, conceito e artes na medida';pc.prepend(h);}
+      if(d.p.length){const h=document.createElement('em');h.innerHTML='Peças da campanha para este ponto<span class="so-tela"> · clique para ver renders, conceito e artes na medida</span>';pc.prepend(h);}
       box.classList.remove('troca');void box.offsetWidth;box.classList.add('troca');
     }
     pins.forEach((p,i)=>p.addEventListener('click',e=>{e.stopPropagation();mostra(i);}));
