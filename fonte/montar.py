@@ -22,6 +22,10 @@ GRUPO = {
 }
 CANAL = {'DTC': 'DTC', 'B2B Alimentar': 'B2B Alimentar', 'B2B Especializado': 'B2B Especializado', 'B2B Compartilhado': 'B2B Compartilhado'}
 
+# 29/10: o Caique tirou estas peças da campanha e a vista 3/4 do display de ponto extra; a vista conceito saiu de todas
+FORA = {'P037', 'P040', 'P050', 'P051', 'P053', 'P054', 'P055', 'P056', 'P067', 'P006', 'P008', 'P010', 'P020', 'P023'}
+SEM_VISTA = {'P044': {'heroi'}}
+
 def pasta_da_peca(cod):
     # há pastas antigas com o mesmo código (R1.png, R2.png): vale a que tem o render herói
     for d in sorted(DRIVE.glob(cod + '_*')):
@@ -53,7 +57,7 @@ ws = wb['Status 3D']
 pecas = []
 for lin in ws.iter_rows(min_row=2, values_only=True):
     cod, canal, nome, resp, _, _, cena, _, _, status, obs = lin[:11]
-    if not cod or status != 'Feito' or cena != 'sim':
+    if not cod or status != 'Feito' or cena != 'sim' or cod in FORA:
         continue
     ap = pasta_da_peca(cod)
     if not ap:
@@ -67,6 +71,8 @@ for lin in ws.iter_rows(min_row=2, values_only=True):
         if not o:
             continue
         k, tipo = o
+        if tipo in SEM_VISTA.get(cod, ()):
+            continue
         imgs.append((k, f.name, tipo, f))
     imgs.sort()
     vistas = []
@@ -74,12 +80,6 @@ for lin in ws.iter_rows(min_row=2, values_only=True):
         arq = f'{i+1:02d}-{tipo}.webp'
         w, h = salva(f, SAIDA / pid / arq, 1600)
         vistas.append({'src': f'assets/pecas/{pid}/{arq}', 'tipo': tipo, 'w': w, 'h': h})
-    # conceito do ChatGPT com os KVs novos (a versão mais nova)
-    conc = sorted((ap / 'CONCEITO').glob('*_conceito_kv27_v*.png'))
-    conceito = None
-    if conc:
-        w, h = salva(conc[-1], SAIDA / pid / 'conceito.webp', 1100)
-        conceito = {'src': f'assets/pecas/{pid}/conceito.webp', 'w': w, 'h': h}
     # artes na medida de produção (as faces planas que vão para a gráfica), da pasta TEXTURAS
     artes = []
     tex = ap / 'TEXTURAS'
@@ -99,9 +99,9 @@ for lin in ws.iter_rows(min_row=2, values_only=True):
     pecas.append({
         'id': pid, 'codigo': cod, 'nome': nome, 'canal': CANAL.get(canal, canal),
         'grupo': GRUPO.get(cod, canal.replace('B2B ', '')),
-        'mini': f'assets/pecas/{pid}/mini.webp', 'vistas': vistas, 'conceito': conceito, 'artes': artes[:6],
+        'mini': f'assets/pecas/{pid}/mini.webp', 'vistas': vistas, 'artes': artes[:6],
     })
-    print(cod, nome, len(vistas), 'vistas', 'conceito' if conceito else 'sem conceito')
+    print(cod, nome, len(vistas), 'vistas')
 
 (RAIZ / 'assets' / 'pecas.js').write_text('window.PECAS=' + json.dumps(pecas, ensure_ascii=False, separators=(',', ':')) + ';\n', encoding='utf-8')
 print(len(pecas), 'peças')
