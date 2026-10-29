@@ -132,7 +132,7 @@
     else if(e.key==='Home')ir(0);else if(e.key==='End')ir(total-1);
     else if(e.key==='m'||e.key==='M')sum.classList.contains('aberto')?fecharSum():abrirSum();
   });
-  const INTERATIVO='a,button,input,.amplia,[data-cursor],#sumario,svg';
+  const INTERATIVO='a,button,input,.amplia,[data-cursor],#sumario,svg,model-viewer';
   $('#wrap').addEventListener('click',e=>{
     if(e.target.closest(INTERATIVO))return;
     if(sum.classList.contains('aberto'))return;
@@ -143,7 +143,7 @@
   addEventListener('touchend',e=>{
     if(x0===null||ficha.classList.contains('aberta')||caixa.classList.contains('aberta'))return;
     const dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;
-    if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy))ir(dx<0?atual+1:atual-1);x0=null;
+    if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)&&!e.target.closest('model-viewer'))ir(dx<0?atual+1:atual-1);x0=null;
   });
 
   /* lightbox */
@@ -177,7 +177,7 @@
     if(a){
       const url=AR_BASE+'?peca='+p.id;
       ar.innerHTML='<div class="bloco"><img alt="QR do AR"><div><p>Aponte a câmera do celular para ver a peça em tamanho real, no lugar.</p><a class="botao mini" target="_blank" rel="noopener" data-cursor="Abrir">Abrir em AR</a></div></div>';
-      ar.querySelector('img').src=AR_BASE+(a.qr||('qr/'+p.id+'.svg'));ar.querySelector('a').href=url;
+      ar.querySelector('img').src='assets/qr/'+p.id+'.svg';ar.querySelector('a').href=a.pagina||url;
     }
     ficha.classList.add('aberta');pararAutos();
   }
@@ -191,6 +191,7 @@
   fetch(AR_BASE+'pecas.json',{cache:'no-store'}).then(r=>r.ok?r.json():[]).then(l=>{
     (Array.isArray(l)?l:[]).forEach(a=>{if(a&&a.id)comAR[a.id]=a;});
     $$('.peca').forEach(b=>{if(comAR[b.dataset.ficha]&&!b.querySelector('.ar-tag')){const t=document.createElement('i');t.className='ar-tag';t.textContent='AR';b.appendChild(t);}});
+    montaAR();
   }).catch(()=>{});
 
   /* ---------------------------------------------------------- cursor */
@@ -348,6 +349,31 @@
     aoEntrar['s-c3d']=()=>mostra(ids[0]);
     roteiro('s-c3d',{itens:()=>$$('button',box),ms:()=>5500});
   })();
+
+  /* ---------------------------------------------------------- 14 AR: as peças já publicadas na página de AR */
+  let carregouMV=false;
+  function montaAR(){
+    const box=$('#arChips'),ids=Object.keys(comAR);if(!ids.length||box.children.length)return;
+    // ordem da campanha (a mesma das galerias)
+    const lista=PECAS.filter(p=>comAR[p.id]);
+    lista.slice(0,12).forEach(p=>{const b=document.createElement('button');b.textContent=p.codigo+' · '+p.nome;b.dataset.cursor='Ver';b.dataset.id=p.id;
+      b.addEventListener('click',e=>{e.stopPropagation();mostraAR(p.id);});box.appendChild(b);});
+    $('#arConta').textContent=lista.length===1?'1 peça em AR':lista.length+' peças em AR';
+    mostraAR(lista[0].id);
+  }
+  function mostraAR(id){
+    const a=comAR[id],mv=$('#arMv');if(!a)return;
+    mv.setAttribute('src',a.glb);mv.setAttribute('ios-src',a.usdz);mv.setAttribute('poster',a.poster);
+    if(a.placement==='wall')mv.setAttribute('ar-placement','wall');else mv.removeAttribute('ar-placement');
+    const m=a.medidas_cm,f=v=>new Intl.NumberFormat('pt-BR',{maximumFractionDigits:1}).format(v);
+    $('#arMed').textContent=m?porId[id].codigo+' · '+m.map(f).join(' × ')+' cm':porId[id].codigo;
+    $$('#arChips button').forEach(b=>b.classList.toggle('on',b.dataset.id===id));
+  }
+  aoEntrar['s-ar']=()=>{
+    if(!carregouMV){carregouMV=true;const sc=document.createElement('script');sc.type='module';sc.src='assets/vendor/model-viewer.min.js';document.head.appendChild(sc);}
+    if(modoPdf)$('#arMv').removeAttribute('auto-rotate');
+  };
+  roteiro('s-ar',{itens:()=>$$('#arChips button'),ms:()=>7000});
 
   /* ---------------------------------------------------------- temporizador
      Os botões de cada tela abrem sozinhos, um de cada vez, com tempo para ler.
